@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spesa Smart — la lista che si legge da sola</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1c1b17;
+  --paper:#faf6ec;
+  --paper-shade:#ece2c8;
+  --forest:#163528;
+  --forest-2:#0c1f17;
+  --saffron:#e8a33d;
+  --tomato:#d1453b;
+  --line:rgba(28,27,23,.16);
+  --line-strong:rgba(28,27,23,.32);
+  --font-display:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse 1200px 700px at 15% -10%, rgba(232,163,61,.10), transparent 60%),
+    radial-gradient(ellipse 900px 600px at 110% 10%, rgba(255,255,255,.05), transparent 55%),
+    linear-gradient(160deg, var(--forest) 0%, var(--forest-2) 70%);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:var(--font-mono);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:60px;
+}
+::selection{background:var(--saffron);color:var(--ink);}
+:focus-visible{outline:2px solid var(--saffron);outline-offset:2px;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+.wrap{max-width:600px;margin:0 auto;padding:18px 16px 0;}
+
+/* ===== HEADER ===== */
+.topbar{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;margin-bottom:18px;
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{
+  font-size:34px;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.4));
+  transform:rotate(-6deg);
+}
+.brand h1{
+  font-family:var(--font-display);
+  color:var(--paper);
+  font-size:24px;font-weight:700;margin:0;letter-spacing:.5px;
+}
+.brand .tagline{
+  color:rgba(250,246,236,.55);
+  font-size:11.5px;margin:2px 0 0;letter-spacing:.3px;
+}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.save-indicator{
+  font-size:10.5px;color:rgba(250,246,236,.6);
+  display:flex;align-items:center;gap:5px;margin-right:4px;
+  white-space:nowrap;
+}
+.save-indicator .dot{
+  width:6px;height:6px;border-radius:50%;background:#6fbf8b;
+  box-shadow:0 0 0 0 rgba(111,191,139,.6);
+  animation:pulse 2.2s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(111,191,139,.55);}
+  70%{box-shadow:0 0 0 6px rgba(111,191,139,0);}
+  100%{box-shadow:0 0 0 0 rgba(111,191,139,0);}
+}
+.stamp-btn{
+  background:var(--paper);
+  color:var(--forest);
+  border:1.5px solid var(--ink);
+  border-radius:var(--radius);
+  padding:7px 10px;
+  font-size:11.5px;font-weight:700;
+  letter-spacing:.2px;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s ease, box-shadow .12s ease;
+  white-space:nowrap;
+}
+.stamp-btn:hover{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink);}
+.stamp-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);}
+
+/* ===== TABS ===== */
+.tabs{
+  display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;
+  scrollbar-width:thin;
+}
+.tabs::-webkit-scrollbar{height:5px;}
+.tabs::-webkit-scrollbar-thumb{background:rgba(250,246,236,.25);border-radius:4px;}
+.tab{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(250,246,236,.08);
+  color:rgba(250,246,236,.75);
+  border:1px solid rgba(250,246,236,.18);
+  border-bottom:3px solid transparent;
+  padding:8px 12px;border-radius:6px 6px 0 0;
+  font-size:12.5px;font-weight:500;
+  transition:.15s ease;
+}
+.tab:hover{background:rgba(250,246,236,.14);}
+.tab.active{
+  background:var(--paper);
+  color:var(--ink);
+  border-color:var(--paper);
+  font-weight:700;
+}
+.tab .tab-emoji{font-size:14px;}
+.tab .tab-badge{
+  background:var(--tomato);color:#fff;border-radius:20px;
+  font-size:9.5px;font-weight:700;padding:1px 6px;min-width:14px;text-align:center;
+}
+.tab.active .tab-badge{background:var(--ink);}
+.tab-new{
+  flex:0 0 auto;background:transparent;color:rgba(250,246,236,.55);
+  border:1px dashed rgba(250,246,236,.35);border-radius:6px 6px 0 0;
+  padding:8px 12px;font-size:13px;font-weight:700;
+}
+.tab-new:hover{color:var(--saffron);border-color:var(--saffron);}
+
+/* ===== STAGE / RECEIPT ===== */
+.stage{min-height:200px;}
+.receipt-shadow-wrap{
+  filter:drop-shadow(0 14px 28px rgba(0,0,0,.45));
+  margin-bottom:22px;
+  animation:riseIn .45s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.receipt{
+  background:var(--paper);
+  background-image:repeating-linear-gradient(180deg, rgba(28,27,23,.02) 0 2px, transparent 2px 4px);
+  padding:26px 22px 18px;
+  position:relative;
+}
+.receipt-head{
+  text-align:center;border-bottom:2px dashed var(--line-strong);
+  padding-bottom:14px;margin-bottom:6px;
+}
+.receipt-emoji-btn{
+  background:none;border:none;font-size:38px;line-height:1;
+  margin-bottom:4px;transition:transform .15s;
+}
+.receipt-emoji-btn:hover{transform:scale(1.12) rotate(-4deg);}
+.receipt-title{
+  font-family:var(--font-display);font-weight:700;font-size:21px;
+  letter-spacing:.5px;text-transform:uppercase;
+  outline:none;border-bottom:1px dashed transparent;display:inline-block;
+  padding:0 2px;max-width:100%;
+}
+.receipt-title:focus{border-bottom:1px dashed var(--ink);}
+.receipt-sub{font-size:10.5px;color:#6b6657;letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
+.receipt-tools{
+  display:flex;justify-content:center;gap:14px;margin-top:8px;
+}
+.receipt-tools button{
+  background:none;border:none;font-size:11px;color:#857f6c;
+  text-decoration:underline;text-underline-offset:2px;
+}
+.receipt-tools button:hover{color:var(--tomato);}
+
+.progress-row{
+  display:flex;align-items:center;gap:8px;margin:14px 0 10px;font-size:10.5px;color:#6b6657;
+}
+.progress-track{
+  flex:1;height:6px;background:var(--paper-shade);border-radius:3px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--forest),#2e6e52);
+  border-radius:3px;transition:width .35s ease;
+}
+
+.category-block{margin-top:16px;}
+.category-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:#857f6c;margin-bottom:6px;
+}
+.category-label::after{
+  content:'';flex:1;border-bottom:1px dotted var(--line);
+}
+
+.item-row{
+  display:flex;align-items:center;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--line);
+  transition:opacity .2s;
+}
+.item-row:last-child{border-bottom:none;}
+.check-btn{
+  flex:0 0 auto;width:21px;height:21px;border-radius:50%;
+  border:2px solid var(--ink);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--paper);padding:0;
+}
+.item-row.is-checked .check-btn{
+  background:var(--tomato);border-color:var(--tomato);color:#fff;
+}
+.check-btn.stamping{animation:stampPop .35s ease;}
+@keyframes stampPop{0%{transform:scale(1);}40%{transform:scale(1.5) rotate(-12deg);}100%{transform:scale(1);}}
+
+.item-name{
+  font-size:13.5px;font-weight:500;outline:none;
+  word-break:break-word;min-width:30px;
+}
+.item-row.is-checked .item-name{
+  text-decoration:line-through;color:#9b9685;
+}
+.item-leader{flex:1;min-width:8px;border-bottom:2px dotted var(--line);height:.65em;align-self:flex-end;margin-bottom:3px;}
+.item-qty{
+  flex:0 0 auto;font-size:12px;font-weight:700;color:var(--forest);outline:none;
+  min-width:14px;text-align:right;
+}
+.item-row.is-checked .item-qty{color:#9b9685;}
+.item-weight{
+  flex:0 0 auto;font-size:10.5px;background:var(--paper-shade);
+  border-radius:3px;padding:2px 6px;outline:none;color:#54503f;min-width:10px;
+}
+.item-weight.is-empty:not(:focus)::before{content:attr(data-placeholder);opacity:.45;}
+.del-btn{
+  flex:0 0 auto;background:none;border:none;color:#b9b39d;font-size:13px;
+  padding:2px 3px;opacity:.7;
+}
+.del-btn:hover{color:var(--tomato);opacity:1;}
+
+.empty-state{
+  text-align:center;padding:30px 10px 10px;color:#857f6c;font-size:12.5px;line-height:1.6;
+}
+.empty-state .big{font-size:30px;display:block;margin-bottom:8px;}
+
+/* add item */
+.add-item-row{margin-top:14px;border-top:2px dashed var(--line-strong);padding-top:12px;}
+.add-item-btn{
+  width:100%;background:none;border:1.5px dashed var(--line-strong);border-radius:4px;
+  padding:9px;font-size:12px;font-weight:700;color:#6b6657;letter-spacing:.3px;
+}
+.add-item-btn:hover{border-color:var(--forest);color:var(--forest);}
+.add-item-form{display:none;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.add-item-form.show{display:flex;}
+.add-item-form input{
+  border:1px solid var(--line-strong);border-radius:4px;background:#fff;
+  padding:7px 8px;font-size:12.5px;color:var(--ink);
+}
+.add-item-form input[name="name"]{flex:1 1 120px;min-width:100px;}
+.add-item-form input[name="qty"]{width:48px;text-align:center;}
+.add-item-form input[name="weight"]{width:88px;}
+.add-item-form button{
+  border:none;border-radius:4px;padding:7px 11px;font-size:13px;font-weight:700;
+}
+.add-item-form .btn-ok{background:var(--forest);color:#fff;}
+.add-item-form .btn-cancel{background:none;color:#9b9685;}
+
+/* barcode footer */
+.barcode{
+  margin-top:18px;height:34px;
+  background-image:repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 6px, transparent 6px 9px);
+  opacity:.85;
+}
+.barcode-caption{text-align:center;font-size:9.5px;letter-spacing:3px;color:#857f6c;margin-top:4px;}
+
+/* ===== PASTE PANEL ===== */
+.paste-panel{
+  background:rgba(250,246,236,.06);
+  border:1px solid rgba(250,246,236,.18);
+  border-radius:8px;padding:16px;margin-bottom:24px;
+}
+.paste-panel h3{
+  font-family:var(--font-display);color:var(--paper);font-size:14px;margin:0 0 4px;
+  display:flex;align-items:center;gap:7px;
+}
+.paste-panel p{color:rgba(250,246,236,.5);font-size:11px;margin:0 0 10px;line-height:1.5;}
+.paste-panel textarea{
+  width:100%;min-height:90px;resize:vertical;
+  background:var(--paper);border:1px solid var(--line-strong);border-radius:6px;
+  padding:10px;font-size:12.5px;color:var(--ink);line-height:1.6;
+}
+.paste-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;}
+.paste-hint{font-size:10px;color:rgba(250,246,236,.4);}
+.parse-btn{
+  background:var(--saffron);color:var(--ink);border:none;border-radius:6px;
+  padding:10px 16px;font-size:12.5px;font-weight:700;letter-spacing:.3px;
+  box-shadow:0 3px 0 #b87b1f;transition:transform .1s;
+}
+.parse-btn:hover{transform:translateY(-1px);}
+.parse-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b87b1f;}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(12,20,16,.6);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+  animation:fadeIn .15s ease;
+}
+.modal-overlay.hidden{display:none;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-card{
+  background:var(--paper);border-radius:10px;max-width:380px;width:100%;
+  padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.5);
+  animation:popIn .18s cubic-bezier(.2,.8,.3,1.2);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+.modal-card h3{font-family:var(--font-display);margin:0 0 12px;font-size:16px;}
+.modal-card p{font-size:12.5px;color:#54503f;line-height:1.6;margin:0 0 14px;}
+.modal-card input[type="text"]{
+  width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:9px 10px;
+  font-size:13.5px;margin-bottom:12px;color:var(--ink);
+}
+.emoji-grid,.color-grid{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.emoji-pick{
+  font-size:18px;background:#fff;border:1.5px solid var(--line-strong);border-radius:6px;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+}
+.emoji-pick.sel{border-color:var(--forest);background:#eef5ee;}
+.color-pick{
+  width:26px;height:26px;border-radius:50%;border:2px solid transparent;
+}
+.color-pick.sel{border-color:var(--ink);transform:scale(1.12);}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;}
+.modal-actions button{border:none;border-radius:6px;padding:9px 15px;font-size:12.5px;font-weight:700;}
+.btn-primary{background:var(--forest);color:#fff;}
+.btn-danger{background:var(--tomato);color:#fff;}
+.btn-ghost{background:none;color:#857f6c;}
+
+/* ===== TOAST ===== */
+.toast-wrap{position:fixed;bottom:16px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:200;pointer-events:none;}
+.toast{
+  background:var(--ink);color:var(--paper);font-size:12px;font-weight:500;
+  padding:9px 16px;border-radius:30px;box-shadow:0 8px 20px rgba(0,0,0,.35);
+  animation:toastIn .25s ease, toastOut .25s ease 2.3s forwards;
+  max-width:90vw;text-align:center;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateY(6px);}}
+
+.foot-note{
+  max-width:600px;margin:6px auto 0;padding:0 16px;text-align:center;
+  font-size:10.5px;color:rgba(250,246,236,.35);line-height:1.6;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}
+}
+@media (max-width:380px){
+  .brand h1{font-size:20px;}
+  .receipt{padding:20px 14px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🧾</span>
+      <div>
+        <h1>Spesa Smart</h1>
+        <p class="tagline">la lista che si legge da sola</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span class="save-indicator"><span class="dot"></span><span id="saveText">salvataggio automatico</span></span>
+      <button class="stamp-btn" id="exportBtn">💾 Esporta</button>
+      <button class="stamp-btn" id="importBtn">📂 Importa</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabsRow"></nav>
+
+  <main class="stage" id="stage"></main>
+
+  <section class="paste-panel">
+    <h3>📋 Incolla il messaggio</h3>
+    <p>Incolla qui il testo di WhatsApp (es. quello di tua moglie): l'app separa da sola quantità e peso, tipo «2 pezzi di burro da 500gr».</p>
+    <textarea id="pasteArea" placeholder="2 pezzi di burro da 500gr&#10;Latte intero 1L x2&#10;3 mele&#10;Pane"></textarea>
+    <div class="paste-actions">
+      <span class="paste-hint">Un articolo per riga</span>
+      <button class="parse-btn" id="parseBtn">✨ Analizza e aggiungi</button>
+    </div>
+  </section>
+
+  <p class="foot-note">I dati restano salvati automaticamente in questo browser. Usa "Esporta" ogni tanto per avere un backup JSON che non perdi mai, anche se cambi telefono o cancelli la cache.</p>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= DATA / CATEGORIES ================= */
+var CATEGORIES = [
+  {key:'frutta', label:'Frutta e Verdura', icon:'🥦', words:['mela','mele','banana','insalata','lattuga','pomodor','zucchin','carot','patata','patate','cipolla','cipolle','verdura','frutta','arancia','arance','limone','limoni','pera','pere','broccoli','spinaci','peperone','peperoni','melanzana','melanzane','aglio','prezzemolo','basilico','fragol','uva','kiwi','ananas','sedano','cavolfiore','funghi','cetriol']},
+  {key:'latticini', label:'Latticini e Uova', icon:'🥛', words:['latte','formaggio','burro','yogurt','mozzarella','parmigiano','grana','ricotta','panna','mascarpone','uova','uovo','stracchino','philadelphia','provola']},
+  {key:'carne', label:'Carne e Pesce', icon:'🥩', words:['carne','pollo','manzo','maiale','salsiccia','salsicce','prosciutto','pesce','tonno fresco','salmone','bistecc','wurstel','tacchino','macinato','salame','speck','bresaola','vitello','agnello','gamber','merluzzo','orata','branzino']},
+  {key:'pane', label:'Pane, Pasta e Cereali', icon:'🍞', words:['pane','pasta','riso','farina','biscott','cereali','grissini','fette biscottate','panini','focaccia','taralli','cracker']},
+  {key:'dispensa', label:'Dispensa', icon:'🥫', words:['olio','sale','zucchero','aceto','sugo','passata','scatolette','legumi','fagioli','ceci','lenticchie','marmellata','miele','caffè','caffe','tonno','pelati','brodo','dado']},
+  {key:'bevande', label:'Bevande', icon:'🥤', words:['acqua','vino','birra','succo','coca','bibita','aranciata','tè','the','spumante','prosecco']},
+  {key:'surgelati', label:'Surgelati', icon:'🧊', words:['surgelat','gelato','ghiacciol']},
+  {key:'pulizia', label:'Pulizia e Casa', icon:'🧴', words:['detersivo','detersivi','sapone','carta igienica','scottex','ammorbidente','candeggina','sgrassatore','spugn','sacchetti','bucato','piatti']},
+  {key:'igiene', label:'Igiene Personale', icon:'🧼', words:['shampoo','dentifricio','deodorante','bagnoschiuma','spazzolino','assorbenti','rasoio','crema']},
+  {key:'altro', label:'Altro', icon:'🛒', words:[]}
+];
+var EMOJI_CYCLE = ['🛒','🥦','🥩','🍞','🐟','🧀','🍷','🧴','💊','🐾','🎁','🥐'];
+var COLORS = ['#e8a33d','#d1453b','#2f6b4f','#2c7a7b','#7c4585','#3b6ea5'];
+var STORAGE_KEY = 'spesa_smart_v1';
+
+var memoryFallback = null;
+function storageAvailable(){
+  try{
+    var t='__t__'; localStorage.setItem(t,'1'); localStorage.removeItem(t);
+    return true;
+  }catch(e){ return false; }
+}
+var HAS_STORAGE = storageAvailable();
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function defaultState(){
+  return { lists:[ {id:uid(), name:'Lista 1', emoji:'🛒', color:COLORS[0], items:[]} ], activeListId:null };
+}
+
+var state = load();
+if(!state.activeListId && state.lists.length){ state.activeListId = state.lists[0].id; }
+
+function load(){
+  if(HAS_STORAGE){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ return JSON.parse(raw); }
+    }catch(e){}
+  } else if(memoryFallback){
+    return memoryFallback;
+  }
+  return defaultState();
+}
+
+function save(){
+  memoryFallback = state;
+  if(HAS_STORAGE){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      flashSaved();
+    }catch(e){
+      setSaveText('salvataggio non disponibile — usa Esporta');
+    }
+  } else {
+    setSaveText('salvataggio solo in questa sessione — usa Esporta');
+  }
+}
+
+var saveTextEl = document.getElementById('saveText');
+function setSaveText(t){ saveTextEl.textContent = t; }
+var savedTimer=null;
+function flashSaved(){
+  setSaveText('salvato ✓');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(function(){ setSaveText('salvataggio automatico'); }, 1400);
+}
+
+function getList(id){
+  for(var i=0;i<state.lists.length;i++){ if(state.lists[i].id===id) return state.lists[i]; }
+  return null;
+}
+function activeList(){ return getList(state.activeListId); }
+
+/* ================= PARSER ================= */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
+}
+
+function normalizeUnit(u){
+  u = u.toLowerCase();
+  if(/^(kg|chil)/.test(u)) return 'kg';
+  if(/^(g|gr|grammi|grammo)/.test(u)) return 'g';
+  if(/^(ml|millilitri)/.test(u)) return 'ml';
+  if(/^(l|lt|litri|litro)/.test(u)) return 'L';
+  return u;
+}
+
+function parseItem(rawLine){
+  var line = rawLine.trim();
+  if(!line) return null;
+  line = line.replace(/^[-•*▪–]\s*/,'');
+  line = line.replace(/^\s*\d+[\.\)]\s+/,''); // numerazione tipo "1. " "2) "
+  if(!line) return null;
+
+  var qty = 1, weight = '';
+
+  var weightRegex = /(\d+(?:[.,]\d+)?)\s*(kg|chili|chilo|grammi|grammo|gr|g|millilitri|ml|litri|litro|lt|l)\b/i;
+  var wMatch = line.match(weightRegex);
+  if(wMatch){
+    var num = wMatch[1].replace(',', '.');
+    var unit = normalizeUnit(wMatch[2]);
+    weight = num + unit;
+    line = line.replace(wMatch[0], ' ');
+    line = line.replace(/\bda\s*$/i, ' ');
+  }
+
+  var qMatch = line.match(/(\d+)\s*(?:pezzi|pz\.?|confezioni|conf\.?)\b/i);
+  if(qMatch){
+    qty = parseInt(qMatch[1],10);
+    line = line.replace(qMatch[0], ' ');
+    line = line.replace(/\bdi\b/i, ' ');
+  } else {
+    qMatch = line.match(/(?:^|\s)x\s*(\d+)\b/i) || line.match(/\b(\d+)\s*x(?:\s|$)/i);
+    if(qMatch){
+      qty = parseInt(qMatch[1],10);
+      line = line.replace(qMatch[0], ' ');
+    } else {
+      qMatch = line.match(/\((\d+)\)/);
+      if(qMatch){
+        qty = parseInt(qMatch[1],10);
+        line = line.replace(qMatch[0], ' ');
+      } else {
+        qMatch = line.match(/^\s*(\d+)\s+/);
+        if(qMatch){
+          qty = parseInt(qMatch[1],10);
+          line = line.replace(qMatch[0], ' ');
+        }
+      }
+    }
+  }
+
+  var name = line.replace(/\s{2,}/g,' ').trim();
+  name = name.replace(/^(di|da)\s+/i,'').replace(/\s+(di|da)$/i,'');
+  name = name.trim();
+  if(!name) return null;
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  return { name:name, qty: qty || 1, weight: weight };
+}
+
+function detectCategory(name){
+  var lower = name.toLowerCase();
+  for(var i=0;i<CATEGORIES.length-1;i++){
+    var c = CATEGORIES[i];
+    for(var j=0;j<c.words.length;j++){
+      if(lower.indexOf(c.words[j]) !== -1) return c.key;
+    }
+  }
+  return 'altro';
+}
+
+function addItemsFromText(listId, text){
+  var list = getList(listId);
+  if(!list) return 0;
+  var lines = text.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  var added = 0;
+  lines.forEach(function(line){
+    var parsed = parseItem(line);
+    if(!parsed) return;
+    var norm = parsed.name.trim().toLowerCase();
+    var existing = list.items.find(function(it){
+      return !it.checked && it.name.trim().toLowerCase()===norm && (it.weight||'')===(parsed.weight||'');
+    });
+    if(existing){
+      existing.qty = (existing.qty||1) + (parsed.qty||1);
+    } else {
+      list.items.push({
+        id:uid(), name:parsed.name, qty:parsed.qty||1, weight:parsed.weight||'',
+        checked:false, category:detectCategory(parsed.name)
+      });
+    }
+    added++;
+  });
+  save();
+  return added;
+}
+
+/* ================= RENDER ================= */
+var tabsRow = document.getElementById('tabsRow');
+var stage = document.getElementById('stage');
+
+function render(){
+  renderTabs();
+  renderStage();
+}
+
+function renderTabs(){
+  tabsRow.innerHTML = '';
+  state.lists.forEach(function(list){
+    var remaining = list.items.filter(function(i){return !i.checked;}).length;
+    var btn = document.createElement('button');
+    btn.className = 'tab' + (list.id===state.activeListId ? ' active':'');
+    btn.style.setProperty('--accent', list.color);
+    if(list.id===state.activeListId){ btn.style.borderBottomColor = list.color; }
+    btn.innerHTML = '<span class="tab-emoji">'+list.emoji+'</span><span>'+escapeHtml(list.name)+'</span>' +
+      (remaining>0 ? '<span class="tab-badge">'+remaining+'</span>' : '');
+    btn.addEventListener('click', function(){ state.activeListId = list.id; save(); render(); });
+    tabsRow.appendChild(btn);
+  });
+  var addBtn = document.createElement('button');
+  addBtn.className = 'tab-new';
+  addBtn.textContent = '+ nuova lista';
+  addBtn.addEventListener('click', openAddListModal);
+  tabsRow.appendChild(addBtn);
+}
+
+function renderStage(){
+  stage.innerHTML = '';
+  var list = activeList();
+  if(!list){
+    stage.innerHTML = '<div class="empty-state"><span class="big">🧾</span>Crea la tua prima lista per iniziare.</div>';
+    return;
+  }
+
+  var wrap = document.createElement('div');
+  wrap.className = 'receipt-shadow-wrap';
+  var receipt = document.createElement('div');
+  receipt.className = 'receipt';
+  receipt.style.clipPath = 'var(--torn-clip)';
+
+  var total = list.items.length;
+  var checked = list.items.filter(function(i){return i.checked;}).length;
+  var pct = total ? Math.round(checked/total*100) : 0;
+
+  var head = document.createElement('div');
+  head.className = 'receipt-head';
+  head.innerHTML =
+    '<button class="receipt-emoji-btn" id="emojiBtn" title="Tocca per cambiare icona">'+list.emoji+'</button>' +
+    '<div class="receipt-title" contenteditable="true" id="titleEl" spellcheck="false">'+escapeHtml(list.name)+'</div>' +
+    '<div class="receipt-sub">scontrino della spesa</div>' +
+    '<div class="receipt-tools"><button id="renameTool">rinomina</button><button id="deleteListTool">elimina lista</button></div>';
+  receipt.appendChild(head);
+
+  var progressRow = document.createElement('div');
+  progressRow.className = 'progress-row';
+  progressRow.innerHTML = '<span>'+checked+'/'+total+'</span><div class="progress-track"><div class="progress-fill" style="width:'+pct+'%"></div></div><span>'+pct+'%</span>';
+  receipt.appendChild(progressRow);
+
+  if(total===0){
+    var empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = '<span class="big">📝</span>Nessun articolo ancora.<br>Incolla il messaggio qui sotto oppure aggiungi a mano.';
+    receipt.appendChild(empty);
+  } else {
+    CATEGORIES.forEach(function(cat){
+      var items = list.items.filter(function(i){ return i.category===cat.key; });
+      if(!items.length) return;
+      items.sort(function(a,b){ return (a.checked===b.checked)?0:(a.checked?1:-1); });
+
+      var block = document.createElement('div');
+      block.className = 'category-block';
+      block.innerHTML = '<div class="category-label">'+cat.icon+' '+cat.label+'</div>';
+
+      items.forEach(function(item){
+        block.appendChild(renderItemRow(list, item));
+      });
+      receipt.appendChild(block);
+    });
+  }
+
+  var addRow = document.createElement('div');
+  addRow.className = 'add-item-row';
+  addRow.innerHTML =
+    '<button class="add-item-btn" id="addItemToggle">+ Aggiungi articolo</button>' +
+    '<form class="add-item-form" id="addItemForm">' +
+      '<input name="name" placeholder="Es. Burro" required>' +
+      '<input name="qty" type="number" min="1" value="1">' +
+      '<input name="weight" placeholder="peso es. 500g">' +
+      '<button type="submit" class="btn-ok">✓</button>' +
+      '<button type="button" class="btn-cancel" id="cancelAddItem">✕</button>' +
+    '</form>';
+  receipt.appendChild(addRow);
+
+  var barcode = document.createElement('div');
+  barcode.className = 'barcode';
+  receipt.appendChild(barcode);
+  var bcap = document.createElement('div');
+  bcap.className = 'barcode-caption';
+  bcap.textContent = total + ' ARTICOLI TOTALI';
+  receipt.appendChild(bcap);
+
+  wrap.appendChild(receipt);
+  stage.appendChild(wrap);
+
+  // listeners
+  document.getElementById('emojiBtn').addEventListener('click', function(){
+    var idx = EMOJI_CYCLE.indexOf(list.emoji);
+    list.emoji = EMOJI_CYCLE[(idx+1) % EMOJI_CYCLE.length];
+    save(); render();
+  });
+  var titleEl = document.getElementById('titleEl');
+  titleEl.addEventListener('blur', function(){
+    var v = titleEl.textContent.trim();
+    list.name = v || list.name;
+    save(); renderTabs();
+  });
+  titleEl.addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ e.preventDefault(); titleEl.blur(); }
+  });
+  document.getElementById('renameTool').addEventListener('click', function(){
+    titleEl.focus();
+    document.getSelection().selectAllChildren(titleEl);
+  });
+  document.getElementById('deleteListTool').addEventListener('click', function(){
+    openConfirmModal('Eliminare "'+list.name+'"?', 'Tutti gli articoli di questa lista andranno persi per sempre.', function(){
+      state.lists = state.lists.filter(function(l){return l.id!==list.id;});
+      if(state.lists.length===0){
+        var fresh = defaultState();
+        state.lists = fresh.lists; state.activeListId = fresh.lists[0].id;
+      } else if(state.activeListId===list.id){
+        state.activeListId = state.lists[0].id;
+      }
+      save(); render(); closeModal();
+      toast('🗑️ Lista eliminata');
+    });
+  });
+
+  var toggleBtn = document.getElementById('addItemToggle');
+  var form = document.getElementById('addItemForm');
+  toggleBtn.addEventListener('click', function(){
+    form.classList.add('show'); toggleBtn.style.display='none';
+    form.querySelector('input[name="name"]').focus();
+  });
+  document.getElementById('cancelAddItem').addEventListener('click', function(){
+    form.classList.remove('show'); toggleBtn.style.display='';
+    form.reset();
+  });
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var fd = new FormData(form);
+    var name = (fd.get('name')||'').toString().trim();
+    if(!name) return;
+    var qty = parseInt(fd.get('qty'),10) || 1;
+    var weight = (fd.get('weight')||'').toString().trim();
+    name = name.charAt(0).toUpperCase()+name.slice(1);
+    list.items.push({id:uid(), name:name, qty:qty, weight:weight, checked:false, category:detectCategory(name)});
+    save(); render();
+    toast('✅ "'+name+'" aggiunto');
+  });
+
+  setTimeout(function(){
+    var nameInput = form.querySelector('input[name="name"]');
+    if(nameInput){} // no-op, placeholder for potential future autofocus logic
+  },0);
+}
+
+function renderItemRow(list, item){
+  var row = document.createElement('div');
+  row.className = 'item-row' + (item.checked ? ' is-checked':'');
+  row.dataset.id = item.id;
+
+  var check = document.createElement('button');
+  check.className = 'check-btn';
+  check.innerHTML = item.checked ? '✔' : '';
+  check.setAttribute('aria-label','Segna come preso');
+  check.addEventListener('click', function(){
+    item.checked = !item.checked;
+    check.classList.add('stamping');
+    save();
+    setTimeout(render, 160);
+  });
+  row.appendChild(check);
+
+  var name = document.createElement('span');
+  name.className = 'item-name';
+  name.contentEditable = 'true';
+  name.spellcheck = false;
+  name.textContent = item.name;
+  name.addEventListener('blur', function(){
+    var v = name.textContent.trim();
+    if(v){ item.name = v; item.category = detectCategory(v); }
+    save(); render();
+  });
+  name.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); name.blur(); } });
+  row.appendChild(name);
+
+  var leader = document.createElement('span');
+  leader.className = 'item-leader';
+  row.appendChild(leader);
+
+  var qty = document.createElement('span');
+  qty.className = 'item-qty';
+  qty.contentEditable = 'true';
+  qty.textContent = '×' + item.qty;
+  qty.addEventListener('blur', function(){
+    var n = parseInt(qty.textContent.replace(/[^\d]/g,''),10);
+    item.qty = n && n>0 ? n : 1;
+    qty.textContent = '×' + item.qty;
+    save();
+  });
+  qty.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); qty.blur(); } });
+  row.appendChild(qty);
+
+  var weight = document.createElement('span');
+  weight.className = 'item-weight' + (item.weight ? '' : ' is-empty');
+  weight.contentEditable = 'true';
+  weight.dataset.placeholder = '+peso';
+  weight.textContent = item.weight || '';
+  weight.addEventListener('blur', function(){
+    var v = weight.textContent.trim();
+    item.weight = v;
+    weight.classList.toggle('is-empty', !v);
+    save();
+  });
+  weight.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); weight.blur(); } });
+  row.appendChild(weight);
+
+  var del = document.createElement('button');
+  del.className = 'del-btn';
+  del.textContent = '✕';
+  del.setAttribute('aria-label','Elimina articolo');
+  del.addEventListener('click', function(){
+    list.items = list.items.filter(function(i){return i.id!==item.id;});
+    save(); render();
+  });
+  row.appendChild(del);
+
+  return row;
+}
+
+/* ================= TORN PAPER CLIP-PATH ================= */
+function buildTornClip(teeth, amp){
+  var top=[], bottom=[];
+  for(var i=0;i<=teeth;i++){
+    var x=(i/teeth*100).toFixed(2)+'%';
+    var y=(i%2===0)?'0px':amp+'px';
+    top.push(x+' '+y);
+  }
+  for(var j=teeth;j>=0;j--){
+    var x2=(j/teeth*100).toFixed(2)+'%';
+    var y2=(j%2===0)?'100%':'calc(100% - '+amp+'px)';
+    bottom.push(x2+' '+y2);
+  }
+  return 'polygon(' + top.join(',') + ', ' + bottom.join(',') + ')';
+}
+document.documentElement.style.setProperty('--torn-clip', buildTornClip(18,7));
+
+/* ================= MODALS ================= */
+var modalOverlay = document.getElementById('modalOverlay');
+var modalCard = document.getElementById('modalCard');
+function openModal(html){
+  modalCard.innerHTML = html;
+  modalOverlay.classList.remove('hidden');
+}
+function closeModal(){ modalOverlay.classList.add('hidden'); modalCard.innerHTML=''; }
+modalOverlay.addEventListener('click', function(e){ if(e.target===modalOverlay) closeModal(); });
+
+function openConfirmModal(title, body, onConfirm){
+  openModal(
+    '<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(body)+'</p>' +
+    '<div class="modal-actions"><button class="btn-ghost" id="mCancel">Annulla</button><button class="btn-danger" id="mConfirm">Elimina</button></div>'
+  );
+  document.getElementById('mCancel').addEventListener('click', closeModal);
+  document.getElementById('mConfirm').addEventListener('click', onConfirm);
+}
+
+function openAddListModal(){
+  var chosenEmoji = '🛒', chosenColor = COLORS[0];
+  var emojiHtml = EMOJI_CYCLE.map(function(e,i){
+    return '<button type="button" class="emoji-pick'+(i===0?' sel':'')+'" data-emoji="'+e+'">'+e+'</button>';
+  }).join('');
+  var colorHtml = COLORS.map(function(c,i){
+    return '<button type="button" class="color-pick'+(i===0?' sel':'')+'" data-color="'+c+'" style="background:'+c+'"></button>';
+  }).join('');
+  openModal(
+    '<h3>Nuova lista</h3>' +
+    '<p>Dalle un nome, ad esempio il negozio dove farai la spesa.</p>' +
+    '<input type="text" id="newListName" placeholder="Es. Esselunga, Macellaio, Farmacia...">' +
+    '<div class="emoji-grid">'+emojiHtml+'</div>' +
+    '<div class="color-grid">'+colorHtml+'</div>' +
+    '<div class="modal-actions"><button class="btn-ghost" id="mCancel">Annulla</button><button class="btn-primary" id="mCreate">Crea lista</button></div>'
+  );
+  var nameInput = document.getElementById('newListName');
+  nameInput.focus();
+  modalCard.querySelectorAll('.emoji-pick').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      modalCard.querySelectorAll('.emoji-pick').forEach(function(b){b.classList.remove('sel');});
+      btn.classList.add('sel'); chosenEmoji = btn.dataset.emoji;
+    });
+  });
+  modalCard.querySelectorAll('.color-pick').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      modalCard.querySelectorAll('.color-pick').forEach(function(b){b.classList.remove('sel');});
+      btn.classList.add('sel'); chosenColor = btn.dataset.color;
+    });
+  });
+  document.getElementById('mCancel').addEventListener('click', closeModal);
+  function create(){
+    var name = nameInput.value.trim() || 'Nuova lista';
+    var newList = {id:uid(), name:name, emoji:chosenEmoji, color:chosenColor, items:[]};
+    state.lists.push(newList);
+    state.activeListId = newList.id;
+    save(); render(); closeModal();
+    toast('🆕 Lista "'+name+'" creata');
+  }
+  document.getElementById('mCreate').addEventListener('click', create);
+  nameInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); create(); } });
+}
+
+/* ================= TOAST ================= */
+var toastWrap = document.getElementById('toastWrap');
+function toast(msg){
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  toastWrap.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2600);
+}
+
+/* ================= EXPORT / IMPORT ================= */
+document.getElementById('exportBtn').addEventListener('click', function(){
+  var data = JSON.stringify(state, null, 2);
+  var blob = new Blob([data], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var d = new Date();
+  var stamp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.href = url;
+  a.download = 'lista-spesa-'+stamp+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('💾 Backup JSON scaricato');
+});
+
+var importFile = document.getElementById('importFile');
+document.getElementById('importBtn').addEventListener('click', function(){ importFile.click(); });
+importFile.addEventListener('change', function(){
+  var file = importFile.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var parsed = JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.lists)) throw new Error('formato non valido');
+      openConfirmModalImport(parsed);
+    }catch(e){
+      toast('⚠️ File non valido');
+    }
+    importFile.value = '';
+  };
+  reader.readAsText(file);
+});
+function openConfirmModalImport(parsed){
+  openModal(
+    '<h3>Importare il backup?</h3>' +
+    '<p>Questo sostituirà tutte le liste attuali con quelle del file JSON selezionato (' + parsed.lists.length + ' liste trovate). Operazione non reversibile.</p>' +
+    '<div class="modal-actions"><button class="btn-ghost" id="mCancel">Annulla</button><button class="btn-primary" id="mConfirm">Importa</button></div>'
+  );
+  document.getElementById('mCancel').addEventListener('click', closeModal);
+  document.getElementById('mConfirm').addEventListener('click', function(){
+    state = parsed;
+    if(!state.activeListId && state.lists.length){ state.activeListId = state.lists[0].id; }
+    save(); render(); closeModal();
+    toast('📂 Backup importato');
+  });
+}
+
+/* ================= PASTE PANEL ================= */
+document.getElementById('parseBtn').addEventListener('click', function(){
+  var ta = document.getElementById('pasteArea');
+  var text = ta.value;
+  if(!text.trim()){ toast('Incolla prima il testo da analizzare'); return; }
+  if(!state.activeListId){ toast('Crea prima una lista'); return; }
+  var n = addItemsFromText(state.activeListId, text);
+  ta.value = '';
+  render();
+  toast(n>0 ? ('✨ '+n+' articoli aggiunti') : 'Nessun articolo riconosciuto');
+});
+
+/* ================= INIT ================= */
+render();
+
+})();
+</script>
+</body>
+</html>
